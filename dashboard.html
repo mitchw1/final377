@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard - BaseStat Pro</title>
+  <link rel="stylesheet" href="final_style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="final.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="optimizer.html">Optimizer</a>
+    <a href="tracker.html">Live Tracker</a>
+    <a href="player-insights.html">Player Insights</a>
+    <a href="help.html">Help</a>
+  </nav>
+  <section>
+    <h1>MLB Dashboard</h1>
+    <p>This dashboard visualizes MLB performance data including user-submitted predictions and real-time league stats.</p>
+
+    <div id="loading" style="font-weight:bold; color:#555">Loading charts...</div>
+
+    <canvas id="scoreChart" width="600" height="300"></canvas>
+    <canvas id="externalStatsChart" width="600" height="300"></canvas>
+
+    <div id="mlbLeaders">
+      <h3>Top 5 MLB Home Run Leaders (Live)</h3>
+      <ul id="leadersList">Loading...</ul>
+    </div>
+  </section>
+
+  <script>
+    let scoreChartInstance = null;
+    let externalStatsChartInstance = null;
+
+    async function loadLocalScores() {
+      try {
+        const res = await fetch('/api/scores');
+        if (!res.ok) throw new Error(`Failed to fetch scores: ${res.status}`);
+        const scores = await res.json();
+
+        const labels = scores.map(s => s.date);
+        const data = scores.map(s => s.score);
+
+        if (!labels.length || !data.length) throw new Error('No score data available');
+
+        if (scoreChartInstance) scoreChartInstance.destroy();
+        const ctx = document.getElementById('scoreChart').getContext('2d');
+        scoreChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Fan-Submitted Game Score Predictions',
+              data: data,
+              borderColor: '#1d3557',
+              backgroundColor: 'rgba(29, 53, 87, 0.2)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Fan Score Trends'
+              }
+            }
+          }
+        });
+      } catch (err) {
+        const fallback = [
+          { date: '2024-06-01', score: 85 },
+          { date: '2024-06-02', score: 78 },
+          { date: '2024-06-03', score: 92 }
+        ];
+        const ctx = document.getElementById('scoreChart').getContext('2d');
+        scoreChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: fallback.map(s => s.date),
+            datasets: [{
+              label: 'Fallback Score Data',
+              data: fallback.map(s => s.score),
+              borderColor: '#ff6f61',
+              backgroundColor: 'rgba(255, 111, 97, 0.2)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Fallback Score Data (No Live Scores Found)'
+              }
+            }
+          }
+        });
+        console.error('Live scores failed, fallback data used:', err);
+      }
+    }
+
+    async function loadExternalStats() {
+      try {
+        const currentYear = new Date().getFullYear();
+        const res = await fetch(`https://statsapi.mlb.com/api/v1/stats/leaders?leaderCategories=homeRuns&season=${currentYear}&limit=5`);
+        if (!res.ok) throw new Error(`Failed to fetch MLB stats: ${res.status}`);
+        const data = await res.json();
+        const leaders = data.leagueLeaders?.[0]?.leaders || [];
+
+        const list = document.getElementById('leadersList');
+        if (leaders.length === 0) {
+          list.innerHTML = '<li>No data returned from MLB API</li>';
+          return;
+        }
+
+        const names = leaders.map(p => p.player.fullName);
+        const values = leaders.map(p => parseInt(p.value));
+        list.innerHTML = leaders.map(p => `<li><a href="player-insights.html" style="color:#1d3557;text-decoration:none">${p.player.fullName}</a> - ${p.value} HR</li>`).join('');
+
+        if (externalStatsChartInstance) externalStatsChartInstance.destroy();
+        const ctx = document.getElementById('externalStatsChart').getContext('2d');
+        externalStatsChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: names,
+            datasets: [{
+              label: `${currentYear} Home Run Totals`,
+              data: values,
+              backgroundColor: '#e63946'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Live MLB Home Run Leaders'
+              }
+            }
+          }
+        });
+      } catch (err) {
+        document.getElementById('leadersList').innerHTML = '<li>Error loading leaders</li>';
+        console.error('MLB API failed:', err);
+      }
+    }
+
+    async function initializeDashboard() {
+      await Promise.all([loadLocalScores(), loadExternalStats()]);
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    initializeDashboard();
+  </script>
+</body>
+</html>

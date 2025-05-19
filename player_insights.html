@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Player Insights - BaseStat Pro</title>
+  <link rel="stylesheet" href="final_style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="final.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="optimizer.html">Optimizer</a>
+    <a href="tracker.html">Live Tracker</a>
+    <a href="player-insights.html">Player Insights</a>
+    <a href="help.html">Help</a>
+  </nav>
+  <section>
+    <h1>Player Insights</h1>
+    <p>Search for an MLB player to view detailed stats and performance analysis:</p>
+    <input type="text" id="playerSearch" placeholder="Enter full player name (e.g. Aaron Judge)">
+    <button onclick="fetchPlayer()">Search</button>
+    <div id="playerResult"></div>
+    <canvas id="playerChart" width="600" height="300"></canvas>
+  </section>
+
+  <script>
+    let playerChartInstance = null;
+
+    async function fetchPlayer() {
+      const query = document.getElementById('playerSearch').value.trim().toLowerCase();
+      if (!query) return;
+
+      const resultBox = document.getElementById('playerResult');
+      resultBox.innerHTML = 'Searching...';
+
+      try {
+        const response = await fetch(`https://statsapi.mlb.com/api/v1/people/search?name=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error('Failed to search for player');
+
+        const data = await response.json();
+        const players = data.people || [];
+
+        const player = players.find(p => p.fullName.toLowerCase() === query) || players[0];
+
+        if (!player || !player.id) {
+          resultBox.innerHTML = '<p>No matching player found.</p>';
+          return;
+        }
+
+        const playerId = player.id;
+        const fullName = player.fullName;
+
+        const statsRes = await fetch(`https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=season&season=2023`);
+        if (!statsRes.ok) throw new Error('Failed to fetch stats');
+
+        const statsData = await statsRes.json();
+        const statObj = statsData.stats?.[0]?.splits?.[0]?.stat || {};
+
+        const imgUrl = `https://img.mlbstatic.com/mlb-photos/image/upload/v1/people/${playerId}/headshot/67/current.jpg`;
+
+        resultBox.innerHTML = `
+          <div class="player-card">
+            <img src="${imgUrl}" alt="${fullName}" style="width:150px;height:150px;border-radius:8px;">
+            <div>
+              <h3>${fullName}</h3>
+              <p><strong>Position:</strong> ${player.primaryPosition?.name || 'N/A'}</p>
+              <p><strong>Team:</strong> ${player.currentTeam?.name || 'N/A'}</p>
+              <p><strong>Jersey:</strong> ${player.primaryNumber || 'N/A'}</p>
+              <p><strong>Age:</strong> ${player.currentAge || 'N/A'}</p>
+            </div>
+          </div>
+        `;
+
+        if (playerChartInstance) playerChartInstance.destroy();
+
+        const ctx = document.getElementById('playerChart').getContext('2d');
+        playerChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['HR', 'RBI', 'AVG', 'OBP', 'OPS'],
+            datasets: [{
+              label: '2023 Season Stats',
+              data: [
+                parseInt(statObj.homeRuns || 0),
+                parseInt(statObj.rbi || 0),
+                parseFloat(statObj.avg || 0),
+                parseFloat(statObj.obp || 0),
+                parseFloat(statObj.ops || 0)
+              ],
+              backgroundColor: ['#1d3557', '#457b9d', '#a8dadc', '#f4a261', '#e76f51']
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: `Stats for ${fullName}`
+              }
+            }
+          }
+        });
+      } catch (error) {
+        resultBox.innerHTML = '<p>Error loading player data.</p>';
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>

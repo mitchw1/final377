@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>About - BaseStat Pro</title>
+  <link rel="stylesheet" href="final_style.css">
+</head>
+<body>
+  <nav>
+    <a href="final.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="optimizer.html">Optimizer</a>
+    <a href="tracker.html">Live Tracker</a>
+    <a href="player_insights.html">Player Insights</a>
+    <a href="help.html">Help</a>
+  </nav>
+  <section>
+    <h1>About BaseStat Pro</h1>
+    <p><strong>BaseStat Pro</strong> is a full-stack baseball analytics application designed by students in the INST 377 course. Our goal is to combine real-time baseball statistics with user-friendly fantasy tools and visual insights for all baseball fans and data enthusiasts.</p>
+    <button onclick="toggleDetails()">Toggle Project Details</button>
+    <div id="projectDetails" style="display:none;">
+      <p>We integrate the <a href="https://github.com/toddrob99/MLB-StatsAPI" target="_blank">MLB-StatsAPI</a> to power our live data, and use Supabase for storing custom user submissions. Our front-end is built with vanilla HTML/CSS/JS, enhanced with Chart.js for visualizations and Swiper.js for an interactive experience.</p>
+      <p>This project demonstrates our skills in RESTful API integration, asynchronous JavaScript, backend database operations, and responsive design.</p>
+      <p>Whether you're a seasoned fantasy player or just love MLB stats, BaseStat Pro gives you the tools to stay informed and ahead of the game.</p>
+      <p><em>Created by Team INST377 — Spring 2025</em></p>
+    </div>
+
+    <h3>Meet the Developer</h3>
+    <ul>
+        <p>Mitchell Willoughby</p>
+    </ul>
+  </section>
+
+  <script>
+    function toggleDetails() {
+      const details = document.getElementById('projectDetails');
+      details.style.display = details.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>

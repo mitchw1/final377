@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BaseStat Pro</title>
+  <link rel="stylesheet" href="final_style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+</head>
+<body>
+  <nav>
+    <a href="final.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="optimizer.html">Optimizer</a>
+    <a href="tracker.html">Live Tracker</a>
+    <a href="player_insights.html">Player Insights</a>
+    <a href="help.html">Help</a>
+  </nav>
+  <header>
+    <h1>Welcome to BaseStat Pro</h1>
+    <p>Your ultimate destination for baseball stats, fantasy insights, and live game tracking.</p>
+    <form id="scoreForm">
+      <input type="text" name="course" placeholder="Team / Player" required>
+      <input type="number" name="score" placeholder="Custom Score" required>
+      <input type="date" name="date" required>
+      <button type="submit">Submit Stat</button>
+    </form>
+    <div class="swiper">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide">⚾ Live MLB Game Tracker</div>
+        <div class="swiper-slide">📊 Player Insights & Stats Charts</div>
+        <div class="swiper-slide">🧠 Fantasy Team Optimizer</div>
+      </div>
+    </div>
+  </header>
+  <script>
+    document.getElementById('scoreForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        course: form.course.value,
+        score: parseInt(form.score.value),
+        date: form.date.value
+      };
+      await fetch('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      alert('Stat submitted!');
+      form.reset();
+    });
+    new Swiper('.swiper', { loop: true, autoplay: { delay: 3000 } });
+  </script>
+</body>
+</html>

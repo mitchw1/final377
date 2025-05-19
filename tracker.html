@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Game Tracker - BaseStat Pro</title>
+  <link rel="stylesheet" href="final_style.css">
+</head>
+<body>
+  <nav>
+    <a href="final.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="optimizer.html">Optimizer</a>
+    <a href="tracker.html">Live Tracker</a>
+    <a href="player_insights.html">Player Insights</a>
+    <a href="help.html">Help</a>
+  </nav>
+  <section>
+    <h1>Live MLB Game Tracker</h1>
+    <p>Follow every pitch, inning, and final score from around the league in real time:</p>
+
+    <label for="teamFilter">Filter by Team:</label>
+    <input type="text" id="teamFilter" placeholder="Enter team name...">
+
+    <div id="liveData" class="live-data-box">Loading game updates...</div>
+    <div id="highlightedGame" class="highlighted-box"></div>
+  </section>
+
+  <script>
+    let allGames = [];
+
+    async function loadLiveGames() {
+      try {
+        const res = await fetch('https://statsapi.mlb.com/api/v1/schedule?sportId=1');
+        const data = await res.json();
+        allGames = data.dates[0]?.games || [];
+        if (!allGames.length) {
+          document.getElementById('liveData').innerHTML = '<p>No games scheduled for today.</p>';
+          return;
+        }
+        renderGames(allGames);
+        renderSpotlight(allGames);
+      } catch (error) {
+        document.getElementById('liveData').innerHTML = '<p>Failed to load live data. Please try again later.</p>';
+      }
+    }
+
+    function renderGames(games) {
+      const html = games.map(g => {
+        const home = g.teams.home.team.name;
+        const away = g.teams.away.team.name;
+        const status = g.status.detailedState;
+        const time = g.gameDate ? new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD';
+        return `<div class="game-card">
+                  <strong>${away}</strong> @ <strong>${home}</strong> — ${status}<br>
+                  <small>Game Time: ${time}</small>
+                </div>`;
+      }).join('');
+      document.getElementById('liveData').innerHTML = html;
+    }
+
+    function renderSpotlight(games) {
+      const spotlight = games.find(g =>
+        g.teams.home.team.name.includes("Yankees") || g.teams.away.team.name.includes("Yankees")
+      );
+
+      if (spotlight) {
+        const home = spotlight.teams.home.team.name;
+        const away = spotlight.teams.away.team.name;
+        const status = spotlight.status.detailedState;
+        const venue = spotlight.venue.name;
+        const info = `<h3>Spotlight Matchup</h3>
+                      <p><strong>${away}</strong> @ <strong>${home}</strong></p>
+                      <p>Status: ${status}</p>
+                      <p>Venue: ${venue}</p>`;
+        document.getElementById('highlightedGame').innerHTML = info;
+      }
+    }
+
+    document.getElementById('teamFilter').addEventListener('input', function () {
+      const filter = this.value.toLowerCase();
+      const filteredGames = allGames.filter(g =>
+        g.teams.home.team.name.toLowerCase().includes(filter) ||
+        g.teams.away.team.name.toLowerCase().includes(filter)
+      );
+      renderGames(filteredGames);
+    });
+
+    loadLiveGames();
+  </script>
+</body>
+</html>

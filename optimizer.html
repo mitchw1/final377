@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fantasy Optimizer - BaseStat Pro</title>
+  <link rel="stylesheet" href="final_style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="final.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="optimizer.html">Optimizer</a>
+    <a href="tracker.html">Live Tracker</a>
+    <a href="player_insights.html">Player Insights</a>
+    <a href="help.html">Help</a>
+  </nav>
+  <section>
+    <h1>Fantasy Team Optimizer</h1>
+    <p>Choose a strategy and review player stat profiles to build your optimal fantasy team.</p>
+
+    <label for="strategy">Select Strategy:</label>
+    <select id="strategy">
+      <option value="power">Power Hitters</option>
+      <option value="contact">High AVG Batters</option>
+      <option value="speed">Base Stealers</option>
+      <option value="balanced">Balanced Lineup</option>
+    </select>
+    <button onclick="updateChart()">Optimize</button>
+
+    <div style="max-width: 800px; margin: 2em auto;">
+      <canvas id="optimizerChart"></canvas>
+    </div>
+
+    <div id="summary"></div>
+  </section>
+
+  <script>
+    const ctx = document.getElementById('optimizerChart').getContext('2d');
+    let chart;
+
+    function updateChart() {
+      const strategy = document.getElementById('strategy').value;
+      const summary = document.getElementById('summary');
+
+      let labels, data, description;
+
+      if (strategy === 'power') {
+        labels = ['HR', 'RBI', 'SLG', 'OPS'];
+        data = [40, 110, 0.6, 0.95];
+        description = 'Optimized for sluggers with high home run and slugging rates.';
+      } else if (strategy === 'contact') {
+        labels = ['AVG', 'OBP', 'SO Rate', 'BB Rate'];
+        data = [0.32, 0.38, 0.15, 0.12];
+        description = 'Focuses on players with high batting averages and good plate discipline.';
+      } else if (strategy === 'speed') {
+        labels = ['SB', 'SB%', 'Runs', 'Triples'];
+        data = [35, 0.85, 100, 6];
+        description = 'Targets fast players who rack up stolen bases and create scoring chances.';
+      } else {
+        labels = ['AVG', 'HR', 'SB', 'RBI', 'Runs'];
+        data = [0.28, 25, 15, 85, 90];
+        description = 'A well-rounded mix of power, contact, and speed.';
+      }
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Optimizer Profile',
+            data: data,
+            backgroundColor: 'rgba(29, 53, 87, 0.2)',
+            borderColor: '#1d3557',
+            pointBackgroundColor: '#e63946'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Fantasy Team Optimizer Stats'
+            }
+          },
+          scales: {
+            r: {
+              angleLines: { display: true },
+              suggestedMin: 0
+            }
+          }
+        }
+      });
+
+      summary.innerHTML = `<p><strong>Strategy:</strong> ${strategy.charAt(0).toUpperCase() + strategy.slice(1)}<br>${description}</p>`;
+    }
+  </script>
+</body>
+</html>
